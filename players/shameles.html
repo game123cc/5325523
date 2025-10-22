@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бесстыжие — Плеер</title>
+
+  <!-- Иконка -->
+  <link rel="icon" type="image/jpeg" sizes="32x32" href="../icons/myicon.jpg">
+
+  <style>
+    body { margin:0; padding:0; background:#2e4f4f; min-height:100vh; display:flex; flex-direction:column; align-items:center; color:#fff; }
+    .player-container { width:100%; height:70vh; background:#000; position:relative; display:flex; justify-content:center; align-items:center; }
+    video { width:100%; height:100%; object-fit:contain; background:#000; display:block; }
+    .play-button { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:0; height:0; border-left:60px solid white; border-top:35px solid transparent; border-bottom:35px solid transparent; cursor:pointer; z-index:2; }
+    .info-bar { width:100%; background:#355a5a; display:flex; justify-content:center; align-items:flex-start; gap:20px; padding:30px; flex-wrap:wrap; box-sizing:border-box; }
+    .info-block { display:flex; flex-direction:column; align-items:center; color:white; font-family: 'Times New Roman', serif; }
+    .info-input { width:60px; height:60px; font-size:40px; text-align:center; border:none; background:white; color:black; border-radius:4px; margin-bottom:5px; font-weight:bold; }
+    .info-label { font-size:20px; }
+    .note { color:#ffeb3b; font-size:14px; margin-top:8px; }
+    @media (max-width:768px) {
+      .info-bar { padding:15px; }
+      .info-input { width:45px; height:45px; font-size:24px; }
+      .info-label { font-size:14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container" id="playerContainer">
+    <video id="video" controls preload="auto">
+      <source id="videoSource" src="../series/shameless/shameless 1/1.mp4" type="video/mp4">
+      Ваш браузер не поддерживает видео.
+    </video>
+    <div class="play-button" id="playBtn" title="Play/Pause"></div>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-block">
+      <input type="number" id="minutes" class="info-input" min="0" value="0">
+      <div class="info-label">минуты</div>
+    </div>
+    <div class="info-block">
+      <input type="number" id="hours" class="info-input" min="0" value="0">
+      <div class="info-label">часы</div>
+    </div>
+    <div class="info-block">
+      <input type="number" id="episode" class="info-input" min="1" value="1">
+      <div class="info-label">серия</div>
+      <div class="note">ввод → Enter/смена</div>
+    </div>
+    <div class="info-block">
+      <input type="number" id="season" class="info-input" min="1" max="99" value="1">
+      <div class="info-label">сезон</div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const playBtn = document.getElementById('playBtn');
+    const episodeInput = document.getElementById('episode');
+    const seasonInput = document.getElementById('season');
+    const minutesInput = document.getElementById('minutes');
+    const hoursInput = document.getElementById('hours');
+    const videoSource = document.getElementById('videoSource');
+
+    // вспомогательные флаги
+    let triedAltPath = false;
+
+    // Воспроизведение / пауза
+    playBtn.addEventListener('click', () => {
+      if (video.paused) { video.play(); playBtn.style.display = 'none'; }
+      else { video.pause(); playBtn.style.display = 'block'; }
+    });
+    video.addEventListener('play', () => playBtn.style.display = 'none');
+    video.addEventListener('pause', () => playBtn.style.display = 'block');
+
+    // Перемотка по часам/минутам (реагирует сразу)
+    function setTimeFromInputs() {
+      const h = Number(hoursInput.value) || 0;
+      const m = Number(minutesInput.value) || 0;
+      const t = h*3600 + m*60;
+      // если длительность известна — не больше duration
+      if (!isNaN(video.duration) && video.duration > 0) {
+        video.currentTime = Math.min(t, Math.floor(video.duration));
+      } else {
+        // если длительность неизвестна — просто ставим (браузер применит, когда сможет)
+        video.currentTime = t;
+      }
+    }
+    minutesInput.addEventListener('input', setTimeFromInputs);
+    hoursInput.addEventListener('input', setTimeFromInputs);
+
+    // Функция конструирует пути и пробует загрузить видео
+    function buildPaths(season, ep) {
+      // основной ожидаемый путь
+      const primary = `../series/shameless/shameless ${season}/${ep}.mp4`;
+      // на всякий случай — часто встречающаяся опечатка
+      const alt = `../series/shameles/shameles ${season}/${ep}.mp4`;
+      return { primary, alt };
+    }
+
+    // Показываем alert и лог — если не нашли файл
+    function showNotFound(pathTried) {
+      console.warn('Не удалось загрузить видео по пути:', pathTried);
+      alert('Видео не найдено по указанному сезону/серии. Проверь путь и имена файлов на диске.');
+    }
+
+    // Пробуем загрузить сначала primary — при ошибке переключаемся на alt
+    function updateVideo() {
+      triedAltPath = false;
+      const ep = Number(episodeInput.value) || 1;
+      const season = Number(seasonInput.value) || 1;
+      const { primary, alt } = buildPaths(season, ep);
+
+      attemptLoad(primary, alt);
+    }
+
+    function attemptLoad(primaryPath, altPath) {
+      // удаляем старые обработчики ошибок, чтобы не вызывались несколько раз
+      video.removeEventListener('error', onErrorPrimary);
+      video.removeEventListener('error', onErrorAlt);
+
+      // обработчик для primary
+      function onErrorPrimary() {
+        console.warn('Ошибка загрузки primary:', primaryPath);
+        video.removeEventListener('error', onErrorPrimary);
+        // попробуем альтернативный путь
+        triedAltPath = true;
+        video.addEventListener('error', onErrorAlt);
+        video.src = altPath;
+        video.load();
+      }
+
+      // обработчик для alt
+      function onErrorAlt() {
+        console.warn('Ошибка загрузки alt:', altPath);
+        video.removeEventListener('error', onErrorAlt);
+        showNotFound(altPath);
+      }
+
+      // ставим primary и слушаем ошибку
+      video.addEventListener('error', onErrorPrimary);
+      video.src = primaryPath;
+      video.load();
+      // попытка автоматически воспроизвести (если разрешено)
+      video.play().catch(()=>{ /* проиграть не удалось — нормально */ });
+    }
+
+    // Обработчики смены серии/сезона
+    episodeInput.addEventListener('change', updateVideo);
+    seasonInput.addEventListener('change', updateVideo);
+
+    // Если пользователь ввёл Enter в поле серии/сезона — применим
+    [episodeInput, seasonInput].forEach(inp => {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') updateVideo();
+      });
+    });
+
+    // Инициализация: пробуем загрузить стартовое видео (1/1)
+    window.addEventListener('load', () => {
+      updateVideo();
+    });
+
+    // Помощь при ошибках в консоли (для отладки)
+    video.addEventListener('stalled', () => console.log('stalled'));
+    video.addEventListener('suspend', () => console.log('suspend'));
+    video.addEventListener('loadedmetadata', () => {
+      console.log('metadata loaded — duration:', video.duration);
+    });
+  </script>
+</body>
+</html>

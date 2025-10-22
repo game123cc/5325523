@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Фильмы</title>
+
+  <!-- favicon -->
+  <link rel="icon" type="image/jpeg" sizes="32x32" href="icons/myicon.jpg">
+  <link rel="shortcut icon" href="icons/myicon.jpg">
+  <link rel="apple-touch-icon" href="icons/myicon.jpg">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      background-color: #2f4f4f;
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Times New Roman', 'Schoolbook W01', serif;
+      overflow: hidden;
+      color: white;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Левая панель с фильмами */
+    .panel {
+      background-color: #1a1a1a;
+      width: 85%;
+      height: 100vh;
+      border-top-right-radius: 40px;
+      border-bottom-right-radius: 40px;
+      padding: 40px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: 300px;
+      gap: 35px;
+      overflow-y: auto;
+      transition: 0.3s;
+      scroll-behavior: smooth;
+    }
+    .panel::-webkit-scrollbar { width: 10px; }
+    .panel::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#7a7a7a,#bfbfbf); border-radius:10px; }
+
+    /* Кнопка фильма */
+    .btn {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid #000;
+      transition: 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+
+    /* Название фильма (без зелёного квадрата) */
+    .title {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      text-align: center;
+      background: rgba(0,0,0,0.6);
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    /* Правая панель */
+    .sidebar {
+      width: 15%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 80px;
+      gap: 60px;
+      background-color: #2f4f4f;
+    }
+    .icon { width: 70px; height: 70px; cursor: pointer; filter: brightness(0) invert(1); transition:0.25s; }
+    .icon:hover { transform: scale(1.1); filter: brightness(0.8) invert(1); }
+
+    /* Поисковая панель */
+    .search-bar {
+      position: fixed;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 50px;
+      background: white;
+      border-radius: 25px;
+      display: none;
+      align-items: center;
+      padding: 0 20px;
+      gap: 10px;
+      z-index: 100;
+    }
+    .search-bar input { border: none; outline: none; flex: 1; font-size:18px; color:black; background:transparent; user-select:text; }
+    .search-bar img { width:25px; height:25px; }
+
+    /* Адаптив для мобил */
+    @media (max-width:900px) {
+      body { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+      .panel {
+        width:100%; height:auto; border-radius:0; grid-template-columns:repeat(2,1fr);
+        grid-auto-rows:230px; gap:20px; padding:20px; overflow-y: visible;
+      }
+      .btn { height:230px; border-radius:15px; border:none; }
+      .title { font-size:14px; top:auto; bottom:0; background:rgba(0,0,0,0.6); border-radius:0; padding:6px 0; }
+      .sidebar {
+        flex-direction: row; justify-content: center; width:100%; height:80px; gap:60px; padding-top:10px; padding-bottom:10px;
+        background:#1a1a1a; border-top-left-radius:20px; border-top-right-radius:20px; position: fixed; bottom:0; left:0;
+      }
+      .icon { width:50px; height:50px; }
+      .search-bar { width:80%; top:15px; }
+    }
+    @media (max-width:480px) {
+      .panel { grid-template-columns:1fr 1fr; gap:15px; padding-bottom:100px; }
+      .btn { height:200px; }
+      .title { font-size:13px; }
+      .icon { width:45px; height:45px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Поиск -->
+  <div class="search-bar" id="searchBar">
+    <img src="icons/search.png" alt="search" />
+    <input type="text" id="searchInput" placeholder="Поиск фильма..." />
+  </div>
+
+  <!-- Левая панель -->
+  <div class="panel" id="filmPanel">
+    <!-- Для поиска/по клику задаём data-title (русское отображаемое) и data-show (ключ для посредника) -->
+    <div class="btn" style="background-image:url('posters/got.jpg');" data-title="Игра престолов" data-show="got">
+      <div class="title">Игра престолов</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/sopranos.jpg');" data-title="Сопрано" data-show="sopranos">
+      <div class="title">Сопрано</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/skins.jpg');" data-title="Молокососы" data-show="skins">
+      <div class="title">Молокососы</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/misfits.jpg');" data-title="Отбросы" data-show="misfits">
+      <div class="title">Отбросы</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/peaky.jpg');" data-title="Острые козырьки" data-show="peaky">
+      <div class="title">Острые козырьки</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/shameless.jpg');" data-title="Бесстыжие" data-show="shameless">
+      <div class="title">Бесстыжие</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/hollywood.jpg');" data-title="Однажды в Голливуде" data-show="hollywood">
+      <div class="title">Однажды в Голливуде</div>
+    </div>
+
+    <div class="btn" style="background-image:url('posters/wolf.jpg');" data-title="Волк с Уолл-стрит" data-show="wolf">
+      <div class="title">Волк с Уолл-стрит</div>
+    </div>
+  </div>
+
+  <!-- Правая панель -->
+  <div class="sidebar">
+    <img src="icons/home.png" alt="home" class="icon" id="homeBtn" />
+    <img src="icons/search.png" alt="search" class="icon" id="searchBtn" />
+    <img src="icons/mail.png" alt="email" class="icon" id="mailBtn" />
+  </div>
+
+  <script>
+    const searchBtn = document.getElementById('searchBtn');
+    const searchBar = document.getElementById('searchBar');
+    const searchInput = document.getElementById('searchInput');
+    const filmPanel = document.getElementById('filmPanel');
+    const films = filmPanel.querySelectorAll('.btn');
+    const homeBtn = document.getElementById('homeBtn');
+    const mailBtn = document.getElementById('mailBtn');
+
+    // Показ/скрытие поиска
+    searchBtn.addEventListener('click', () => {
+      searchBar.style.display = searchBar.style.display === 'flex' ? 'none' : 'flex';
+      searchInput.focus();
+    });
+
+    // Поиск (используем data-title для поиска по русским названиям)
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      films.forEach(f => {
+        const t = (f.dataset.title || '').toLowerCase();
+        f.style.display = t.includes(q) || q === '' ? 'block' : 'none';
+      });
+    });
+
+    // Домик — прокрутка к началу (для ПК внутренняя панель, для моб — страница)
+    homeBtn.addEventListener('click', () => {
+      if (window.innerWidth > 900) {
+        filmPanel.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    // Почта
+    mailBtn.addEventListener('click', () => {
+      window.location.href = 'mailto:uwishajuauw@gmail.com';
+    });
+
+    // Карточки — переход на посредника (playerhub) с параметром show
+    films.forEach(film => {
+      film.addEventListener('click', () => {
+        const show = film.dataset.show;
+        // передаём show посреднику, он уже откроет нужный players/*.html
+        window.location.href = `playerhub.html?show=${encodeURIComponent(show)}`;
+      });
+    });
+
+    // Защита от копирования / devtools shortcuts
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+        (e.ctrlKey && (e.key === 'U' || e.key === 'S' || e.key === 'C'))
+      ) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

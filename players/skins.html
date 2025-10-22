@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Молокососы — Плеер</title>
+
+  <!-- 🌟 Иконка сайта -->
+  <link rel="icon" type="image/jpeg" sizes="32x32" href="../icons/myicon.jpg">
+  <link rel="shortcut icon" href="../icons/myicon.jpg">
+  <link rel="apple-touch-icon" href="../icons/myicon.jpg">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #2e4f4f;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .player-container {
+      width: 100%;
+      height: 70vh;
+      background-color: black;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background-color: black;
+      border: none;
+      outline: none;
+    }
+
+    .play-button {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      border-left: 60px solid white;
+      border-top: 35px solid transparent;
+      border-bottom: 35px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      z-index: 2;
+    }
+
+    .play-button:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .info-bar {
+      width: 100%;
+      height: 30vh;
+      background-color: #355a5a;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 20px;
+      padding-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .info-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-family: 'Times New Roman', serif;
+    }
+
+    .info-input {
+      width: 60px;
+      height: 60px;
+      font-size: 40px;
+      text-align: center;
+      border: none;
+      background: white;
+      color: black;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .info-label {
+      font-size: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .info-bar {
+        flex-direction: row;
+        justify-content: center;
+        padding-top: 15px;
+        height: auto;
+        padding-bottom: 20px;
+      }
+
+      .info-input {
+        width: 45px;
+        height: 45px;
+        font-size: 24px;
+      }
+
+      .info-label {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container" id="playerContainer">
+    <video id="video" controls preload="auto">
+      <source src="../series/skins/skins 1/1.mp4" type="video/mp4">
+      Ваш браузер не поддерживает видео.
+    </video>
+
+    <div class="play-button" id="playBtn"></div>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-block">
+      <input type="number" id="minutes" class="info-input" min="0" value="0">
+      <div class="info-label">минуты</div>
+    </div>
+    <div class="info-block">
+      <input type="number" id="hours" class="info-input" min="0" value="0">
+      <div class="info-label">часы</div>
+    </div>
+    <div class="info-block">
+      <input type="number" id="episode" class="info-input" min="1" value="1">
+      <div class="info-label">серия</div>
+    </div>
+    <div class="info-block">
+      <input type="number" id="season" class="info-input" min="1" max="7" value="1">
+      <div class="info-label">сезон</div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const playBtn = document.getElementById("playBtn");
+    const episodeInput = document.getElementById("episode");
+    const seasonInput = document.getElementById("season");
+    const minutesInput = document.getElementById("minutes");
+    const hoursInput = document.getElementById("hours");
+
+    // ▶ Проигрывание
+    playBtn.addEventListener("click", () => {
+      if (video.paused) {
+        video.play();
+        playBtn.style.display = "none";
+      } else {
+        video.pause();
+        playBtn.style.display = "block";
+      }
+    });
+
+    video.addEventListener("pause", () => (playBtn.style.display = "block"));
+    video.addEventListener("play", () => (playBtn.style.display = "none"));
+
+    // 🕓 Перемотка
+    minutesInput.addEventListener("change", () => {
+      video.currentTime = hoursInput.value * 3600 + minutesInput.value * 60;
+    });
+
+    hoursInput.addEventListener("change", () => {
+      video.currentTime = hoursInput.value * 3600 + minutesInput.value * 60;
+    });
+
+    // 🎬 Смена серии и сезона
+    function updateVideo() {
+      const ep = episodeInput.value;
+      const season = seasonInput.value;
+      const path = encodeURI(`../series/skins/skins ${season}/${ep}.mp4`);
+      video.src = path;
+      video.load();
+      video.play().catch(() => {});
+    }
+
+    episodeInput.addEventListener("change", updateVideo);
+    seasonInput.addEventListener("change", updateVideo);
+  </script>
+</body>
+</html>
